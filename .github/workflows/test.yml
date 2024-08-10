@@ -1,0 +1,29 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test-check:
+    name: runner / ai-digest (github-check)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ai-digest
+          clean: true
+
+      # Test the action with no options specified.
+      - name: NoOptions
+        uses: ./ai-digest
+
+      # Test the action with all inputs specified.
+      - name: All Options
+        uses: ./ai-digest
+        with:
+          input-directory: '.github/workflows'
+          output-file: 'workflows.md'

@@ -1,0 +1,30 @@
+name: 'ai-digest'
+description: 'Run ai-digest CLI'
+
+inputs:
+  input-directory:
+    description: 'Specify input directory (default: current directory)'
+    required: false
+    default: '.'
+  output-file:
+    description: 'Specify output file (default: codebase.md)'
+    required: false
+    default: 'codebase.md'
+
+outputs:
+  ai-digest-output:
+    description: 'console output produced by ai-digest CLI'
+    value: ${{ steps.ai-digest.outputs.ai-digest-output }}
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Run ai-digest
+      id: ai-digest
+      run: |
+        echo "ai-digest-output=$(npx ai-digest -i $INPUT_DIRECTORY --no-default-ignores --whitespace-removal --show-output-files -o $OUTPUT_FILE)" >> $GITHUB_OUTPUT
+      shell: bash
+      env:
+        INPUT_DIRECTORY: ${{ inputs.input-directory }}
+        OUTPUT_FILE: ${{ inputs.output-file }}
