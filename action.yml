@@ -1,30 +1,79 @@
 name: 'ai-digest'
-description: 'Run ai-digest CLI'
+
+description: 'Runs ai-digest CLI'
 
 inputs:
-  input-directory:
+  input_path:
     description: 'Specify input directory (default: current directory)'
     required: false
     default: '.'
-  output-file:
+
+  output_file:
     description: 'Specify output file (default: codebase.md)'
     required: false
     default: 'codebase.md'
 
+  digest_log:
+    description: 'Specify digest log file (default: ingest.md)'
+    required: false
+    default: 'ingest.md'
+
+  ai_digest_flags:
+    description: 'Flags passed to ai-digest, defaults to removing whitespace and displaying the output files in the digest log'
+    required: false
+    default: '--whitespace-removal --show-output-files'
+
 outputs:
-  ai-digest-output:
-    description: 'console output produced by ai-digest CLI'
-    value: ${{ steps.ai-digest.outputs.ai-digest-output }}
+  total_files:
+    description: Total number of files parsed
+    value: ${{ steps.digest_stats.outputs.total_files }}
+  included_files:
+    description: Total number of files included in digest
+    value: ${{ steps.digest_stats.outputs.included_files }}
+  ignored_files:
+    description: Total number of files ignored
+    value: ${{ steps.digest_stats.outputs.ignored_files }}
+  binary_files:
+    description: Total number of binary files
+    value: ${{ steps.digest_stats.outputs.binary_files }}
+  estimated_tokens:
+    description: Estimated number of tokens in digest
+    value: ${{ steps.digest_stats.outputs.estimated_tokens }}
 
 runs:
-  using: 'composite'
+  using: composite
 
   steps:
+    - name: Install NodeJS
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+
+    - name: Install ai-digest
+      run: npm install -g ai-digest
+      shell: bash
+
     - name: Run ai-digest
-      id: ai-digest
+      id: run_ai_digest
       run: |
-        echo "ai-digest-output=$(npx ai-digest -i $INPUT_DIRECTORY --no-default-ignores --whitespace-removal --show-output-files -o $OUTPUT_FILE)" >> $GITHUB_OUTPUT
+        npx ai-digest -i ${{ inputs.input_path }} ${{ inputs.ai_digest_flags }} -o ${{ inputs.output_file }} | tee ${{ inputs.digest_log }}
+      shell: bash
+
+    - name: Extract ai-digest stats
+      id: digest_stats
+      run: |
+        echo "total_files=$(grep "Total files found" $DIGEST_LOG | cut -d":" -f2 | tr -d ' ')"  >> $GITHUB_OUTPUT
+        echo "included_files=$(grep "Files included in output" $DIGEST_LOG | cut -d":" -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
+        echo "ignored_files=$(grep "Files ignored by default patterns" $DIGEST_LOG | cut -d":" -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
+        echo "binary_files=$(grep "Binary and SVG files included" $DIGEST_LOG | cut -d":" -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
+        echo "estimated_tokens=$(grep "Estimated token count" $DIGEST_LOG | cut -d":" -f2 | tr -d ' ' | tr -d '⚠️')" >> $GITHUB_OUTPUT
       shell: bash
       env:
-        INPUT_DIRECTORY: ${{ inputs.input-directory }}
-        OUTPUT_FILE: ${{ inputs.output-file }}
+        DIGEST_LOG: ${{ inputs.digest_log }}
+
+    - name: Verify digest stats
+      if: steps.digest_stats.outputs.included_files == 0 || steps.digest_stats.outputs.estimated_tokens == 0
+      run: |
+        echo "Digest stats are invalid"
+        exit 1
+      shell: bash

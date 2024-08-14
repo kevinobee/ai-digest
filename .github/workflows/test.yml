@@ -7,8 +7,8 @@ on:
   pull_request:
 
 jobs:
-  test-check:
-    name: runner / ai-digest (github-check)
+  test:
+    name: Test ai-digest action
     runs-on: ubuntu-latest
 
     steps:
@@ -20,10 +20,20 @@ jobs:
       # Test the action with no options specified.
       - name: NoOptions
         uses: ./ai-digest
+      - name: Test NoOptions outputs
+        run: |
+          test -f codebase.md
+          test -f ingest.md
 
       # Test the action with all inputs specified.
       - name: All Options
         uses: ./ai-digest
         with:
-          input-directory: '.github/workflows'
-          output-file: 'workflows.md'
+          input_path: './ai-digest/.github/workflows'
+          output_file: 'workflows.md'
+          digest_log: 'workflows-ingest.md'
+          ai_digest_flags: ''
+      - name: Test Options outputs
+        run: |
+          test -f workflows.md
+          test -f workflows-ingest.md
