@@ -1,10 +1,10 @@
-# ai-digest composite action
+# ai-digest action
 
-This action runs the [ai-digest](https://github.com/khromov/ai-digest) CLI to aggregate file content into a single Markdown file.
+GitHib Action to run [ai-digest](https://github.com/khromov/ai-digest) CLI. Aggregate multiple files into a single `Markdown` file and add it your AI tool of choice. 
 
-## Why
+By adding context to an AI tool you enable it to generate more accurate chat responses and code completions for any subject domain.
 
-AI tools such as [Codeium](https://codeium.com/) can be passed a text file in a format such as `Markdown` or `JSON` that adds [context](https://codeium.com/context) to the tool's chat responses and code completions.
+[![Test](https://github.com/kevinobee/ai-digest/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/kevinobee/ai-digest/actions/workflows/test.yml)
 
 ## Inputs
 
@@ -49,7 +49,7 @@ Estimated number of tokens in the output file.
 ## Example usage
 
 ```yaml
-uses: actions/ai-digest
+uses: kevinobee/ai-digest
 with:
   input_path: './docs'
   output_file: 'docs.md'
