@@ -44,14 +44,9 @@ runs:
   using: composite
 
   steps:
-    - name: Install NodeJS
-      uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
-        node-version: 20
-
-    - name: Install ai-digest
-      run: npm install -g ai-digest
-      shell: bash
+        node-version: '20'
 
     - name: Run ai-digest
       id: run_ai_digest
