@@ -18,22 +18,37 @@ jobs:
           clean: true
 
       # Test the action with no options specified.
-      - name: NoOptions
+      - name: No Options
+        id: no_options
         uses: ./ai-digest
-      - name: Test NoOptions outputs
+
+      - name: Test No Options output files exist
         run: |
           test -f codebase.md
           test -f ingest.md
 
+      - name: Check No Options outputs
+        run: |
+          test ${{ steps.no_options.outputs.included_files }} -gt 0
+          test ${{ steps.no_options.outputs.estimated_tokens }} -gt 10
+
       # Test the action with all inputs specified.
       - name: All Options
+        id: all_options
         uses: ./ai-digest
         with:
           input_path: './ai-digest/.github/workflows'
           output_file: 'workflows.md'
           digest_log: 'workflows-ingest.md'
           ai_digest_flags: ''
-      - name: Test Options outputs
+          # TODO any more?
+
+      - name: Test All Options output files exist
         run: |
           test -f workflows.md
           test -f workflows-ingest.md
+
+      - name: Check All Options outputs
+        run: |
+          test ${{ steps.all_options.outputs.included_files }} -gt 0
+          test ${{ steps.all_options.outputs.estimated_tokens }} -gt 10
