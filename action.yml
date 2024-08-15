@@ -4,7 +4,7 @@ description: 'Runs ai-digest CLI as a GitHub Action'
 
 inputs:
   input_path:
-    description: 'Specify input directory (default: current directory)'
+    description: 'The input directory to aggregate content from (default: current directory)'
     required: false
     default: '.'
 
@@ -25,19 +25,19 @@ inputs:
 
 outputs:
   total_files:
-    description: Total number of files parsed
+    description: Total number of files parsed from the `input_path` folder
     value: ${{ steps.digest_stats.outputs.total_files }}
   included_files:
-    description: Total number of files included in digest
+    description: Total number of files included in the output file
     value: ${{ steps.digest_stats.outputs.included_files }}
   ignored_files:
     description: Total number of files ignored
     value: ${{ steps.digest_stats.outputs.ignored_files }}
   binary_files:
-    description: Total number of binary files
+    description: Total number of binary files in the output file
     value: ${{ steps.digest_stats.outputs.binary_files }}
   estimated_tokens:
-    description: Estimated number of tokens in digest
+    description: Estimated number of tokens in the output file
     value: ${{ steps.digest_stats.outputs.estimated_tokens }}
 
 runs:
