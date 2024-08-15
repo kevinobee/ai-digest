@@ -1,6 +1,6 @@
 name: 'ai-digest'
 
-description: 'Runs ai-digest CLI'
+description: 'Runs ai-digest CLI as a GitHub Action'
 
 inputs:
   input_path:
@@ -70,10 +70,3 @@ runs:
       shell: bash
       env:
         DIGEST_LOG: ${{ inputs.digest_log }}
-
-    - name: Verify digest stats
-      if: steps.digest_stats.outputs.included_files == 0 || steps.digest_stats.outputs.estimated_tokens == 0
-      run: |
-        echo "Digest stats are invalid"
-        exit 1
-      shell: bash
