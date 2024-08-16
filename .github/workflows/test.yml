@@ -7,8 +7,8 @@ on:
   pull_request:
 
 jobs:
-  no-options:
-    name: Test ai-digest action without options
+  no-inputs:
+    name: Test ai-digest action without inputs
     runs-on: ubuntu-latest
 
     env:
@@ -37,11 +37,17 @@ jobs:
           test ${{ steps.run_action.outputs.binary_files }} -eq 0
           test ${{ steps.run_action.outputs.total_files }} -gt 0
 
-          # Verify files are listed in the digest
+      - name: Check files are listed in output
+        run: |
+          cat ${{ env.DIGEST_LOG }} | grep 'Files included in the output:'
           cat ${{ env.DIGEST_LOG }} | grep 'README.md'
 
-  all-options:
-    name: Test ai-digest action specifying all options
+      - name: Check whitespace-removal is applied
+        run: |
+          cat ${{ env.DIGEST_LOG }} | grep 'Whitespace removal enabled'
+
+  all-inputs:
+    name: Test ai-digest action with inputs
     runs-on: ubuntu-latest
 
     env:
@@ -61,7 +67,7 @@ jobs:
           input_path: './ai-digest/.github/workflows'
           output_file: ${{ env.OUTPUT_FILE }}
           digest_log: ${{ env.DIGEST_LOG }}
-          ai_digest_flags: '--whitespace-removal --show-output-files'
+          ai_digest_flags: ''
 
       - name: Check output files exist
         run: |
@@ -75,37 +81,10 @@ jobs:
           test ${{ steps.run_action.outputs.binary_files }} -eq 0
           test ${{ steps.run_action.outputs.total_files }} -gt 0
 
-          # Verify files are listed in the digest
-          cat ${{ env.DIGEST_LOG }} | grep 'test.yml'
-
-  no-output-file-listing:
-    name: Test ai-digest action can exclude file listing in digest log
-    runs-on: ubuntu-latest
-
-    env:
-      OUTPUT_FILE: no-file-listing.md
-      DIGEST_LOG: no-file-listing-ingest.md
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          path: ai-digest
-          clean: true
-
-      - name: Run action
-        id: run_action
-        uses: ./ai-digest
-        with:
-          input_path: './ai-digest/.github/workflows'
-          output_file: ${{ env.OUTPUT_FILE }}
-          digest_log: ${{ env.DIGEST_LOG }}
-          ai_digest_flags: '--whitespace-removal'
-
-      - name: Check no file listing is included in the digest log
+      - name: Check files are not listed
         run: |
-          test ${{ steps.run_action.outputs.included_files }} -gt 0
-          test ${{ steps.run_action.outputs.total_files }} -gt 0
+          test -z "$(cat ${{ env.DIGEST_LOG }} | grep 'Files included in the output:')"
 
-          # Verify files are not listed in the digest
-          test -f ${{ env.DIGEST_LOG }}
-          test -z "$(cat ${{ env.DIGEST_LOG }} | grep 'test.yml')"
+      - name: Check whitespace-removal is not applied
+        run: |
+          test -z "$(cat ${{ env.DIGEST_LOG }} | grep 'Whitespace removal enabled')"

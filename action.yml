@@ -51,7 +51,10 @@ runs:
     - name: Run ai-digest
       id: run_ai_digest
       run: |
+        echo `Running ai-digest -i ${{ inputs.input_path }} ${{ inputs.ai_digest_flags }} -o ${{ inputs.output_file }}`
         npx ai-digest -i ${{ inputs.input_path }} ${{ inputs.ai_digest_flags }} -o ${{ inputs.output_file }} | tee ${{ inputs.digest_log }}
+        echo "Created output file: ${{ inputs.output_file }}"
+        echo "Created digest log: ${{ inputs.digest_log }}"
       shell: bash
 
     - name: Extract ai-digest stats
