@@ -7,9 +7,13 @@ on:
   pull_request:
 
 jobs:
-  test:
-    name: Test ai-digest action
+  no-options:
+    name: Test ai-digest action without options
     runs-on: ubuntu-latest
+
+    env:
+      OUTPUT_FILE: codebase.md
+      DIGEST_LOG: ingest.md
 
     steps:
       - uses: actions/checkout@v4
@@ -17,63 +21,91 @@ jobs:
           path: ai-digest
           clean: true
 
-      - name: No Options
-        id: no_options
+      - name: Run action
+        id: run_action
         uses: ./ai-digest
 
-      - name: Check No Options output files exist
+      - name: Check output files exist
         run: |
-          test -f codebase.md
-          test -f ingest.md
+          test -f ${{ env.OUTPUT_FILE }}
+          test -f ${{ env.DIGEST_LOG }}
 
-      - name: Check No Options outputs
+      - name: Check outputs
         run: |
-          test ${{ steps.no_options.outputs.included_files }} -gt 0
-          test ${{ steps.no_options.outputs.estimated_tokens }} -gt 0
-          test ${{ steps.no_options.outputs.binary_files }} -eq 0
-          # test ${{ steps.no_options.outputs.ignored_files }} -eq 0
-          test ${{ steps.no_options.outputs.total_files }} -gt 0
+          test ${{ steps.run_action.outputs.included_files }} -gt 0
+          test ${{ steps.run_action.outputs.estimated_tokens }} -gt 0
+          test ${{ steps.run_action.outputs.binary_files }} -eq 0
+          test ${{ steps.run_action.outputs.total_files }} -gt 0
+
           # Verify files are listed in the digest
-          cat ingest.md | grep 'README.md'
+          cat ${{ env.DIGEST_LOG }} | grep 'README.md'
 
-      - name: All Options
-        id: all_options
+  all-options:
+    name: Test ai-digest action specifying all options
+    runs-on: ubuntu-latest
+
+    env:
+      OUTPUT_FILE: workflows.md
+      DIGEST_LOG: workflows-ingest.md
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ai-digest
+          clean: true
+
+      - name: Run action
+        id: run_action
         uses: ./ai-digest
         with:
           input_path: './ai-digest/.github/workflows'
-          output_file: 'workflows.md'
-          digest_log: 'workflows-ingest.md'
+          output_file: ${{ env.OUTPUT_FILE }}
+          digest_log: ${{ env.DIGEST_LOG }}
           ai_digest_flags: '--whitespace-removal --show-output-files'
 
-      - name: Check All Options output files exist
+      - name: Check output files exist
         run: |
-          test -f workflows.md
-          test -f workflows-ingest.md
+          test -f ${{ env.OUTPUT_FILE }}
+          test -f ${{ env.DIGEST_LOG }}
 
-      - name: Check All Options outputs
+      - name: Check outputs
         run: |
-          test ${{ steps.all_options.outputs.included_files }} -gt 0
-          test ${{ steps.all_options.outputs.estimated_tokens }} -gt 0
-          test ${{ steps.all_options.outputs.binary_files }} -eq 0
-          test ${{ steps.all_options.outputs.total_files }} -gt 0
+          test ${{ steps.run_action.outputs.included_files }} -gt 0
+          test ${{ steps.run_action.outputs.estimated_tokens }} -gt 0
+          test ${{ steps.run_action.outputs.binary_files }} -eq 0
+          test ${{ steps.run_action.outputs.total_files }} -gt 0
 
           # Verify files are listed in the digest
-          cat workflows-ingest.md | grep 'test.yml'
+          cat ${{ env.DIGEST_LOG }} | grep 'test.yml'
 
-      - name: Run action without listing output files in digest log
-        id: no_output_file_listing
+  no-output-file-listing:
+    name: Test ai-digest action can exclude file listing in digest log
+    runs-on: ubuntu-latest
+
+    env:
+      OUTPUT_FILE: no-file-listing.md
+      DIGEST_LOG: no-file-listing-ingest.md
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ai-digest
+          clean: true
+
+      - name: Run action
+        id: run_action
         uses: ./ai-digest
         with:
           input_path: './ai-digest/.github/workflows'
-          output_file: 'no-file-listing.md'
-          digest_log: 'no-file-listing-ingest.md'
+          output_file: ${{ env.OUTPUT_FILE }}
+          digest_log: ${{ env.DIGEST_LOG }}
           ai_digest_flags: '--whitespace-removal'
 
-      - name: Check no file listing outputs
+      - name: Check no file listing is included in the digest log
         run: |
-          test ${{ steps.all_options.outputs.included_files }} -gt 0
-          test ${{ steps.all_options.outputs.total_files }} -gt 0
+          test ${{ steps.run_action.outputs.included_files }} -gt 0
+          test ${{ steps.run_action.outputs.total_files }} -gt 0
 
           # Verify files are not listed in the digest
-          # use test to check that test.yml is not in the digest log
-          test -z "$(cat no-file-listing-ingest.md | grep 'test.yml')"
+          test -f ${{ env.DIGEST_LOG }}
+          test -z "$(cat ${{ env.DIGEST_LOG }} | grep 'test.yml')"
