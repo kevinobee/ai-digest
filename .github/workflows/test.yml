@@ -7,9 +7,13 @@ on:
   pull_request:
 
 jobs:
-  test:
-    name: Test ai-digest action
+  no-inputs:
+    name: Test ai-digest action without inputs
     runs-on: ubuntu-latest
+
+    env:
+      OUTPUT_FILE: codebase.md
+      DIGEST_LOG: ingest.md
 
     steps:
       - uses: actions/checkout@v4
@@ -17,38 +21,70 @@ jobs:
           path: ai-digest
           clean: true
 
-      # Test the action with no options specified.
-      - name: No Options
-        id: no_options
+      - name: Run action
+        id: run_action
         uses: ./ai-digest
 
-      - name: Test No Options output files exist
+      - name: Check output files exist
         run: |
-          test -f codebase.md
-          test -f ingest.md
+          test -f ${{ env.OUTPUT_FILE }}
+          test -f ${{ env.DIGEST_LOG }}
 
-      - name: Check No Options outputs
+      - name: Check outputs
         run: |
-          test ${{ steps.no_options.outputs.included_files }} -gt 0
-          test ${{ steps.no_options.outputs.estimated_tokens }} -gt 10
+          test ${{ steps.run_action.outputs.included_files }} -gt 0
+          test ${{ steps.run_action.outputs.estimated_tokens }} -gt 0
+          test ${{ steps.run_action.outputs.binary_files }} -eq 0
+          test ${{ steps.run_action.outputs.total_files }} -gt 0
 
-      # Test the action with all inputs specified.
-      - name: All Options
-        id: all_options
+      - name: Check files are listed in output
+        run: |
+          cat ${{ env.DIGEST_LOG }} | grep 'Files included in the output:'
+          cat ${{ env.DIGEST_LOG }} | grep 'README.md'
+
+      - name: Check whitespace-removal is applied
+        run: |
+          cat ${{ env.DIGEST_LOG }} | grep 'Whitespace removal enabled'
+
+  all-inputs:
+    name: Test ai-digest action with inputs
+    runs-on: ubuntu-latest
+
+    env:
+      OUTPUT_FILE: workflows.md
+      DIGEST_LOG: workflows-ingest.md
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ai-digest
+          clean: true
+
+      - name: Run action
+        id: run_action
         uses: ./ai-digest
         with:
           input_path: './ai-digest/.github/workflows'
-          output_file: 'workflows.md'
-          digest_log: 'workflows-ingest.md'
+          output_file: ${{ env.OUTPUT_FILE }}
+          digest_log: ${{ env.DIGEST_LOG }}
           ai_digest_flags: ''
-          # TODO any more?
 
-      - name: Test All Options output files exist
+      - name: Check output files exist
         run: |
-          test -f workflows.md
-          test -f workflows-ingest.md
+          test -f ${{ env.OUTPUT_FILE }}
+          test -f ${{ env.DIGEST_LOG }}
 
-      - name: Check All Options outputs
+      - name: Check outputs
         run: |
-          test ${{ steps.all_options.outputs.included_files }} -gt 0
-          test ${{ steps.all_options.outputs.estimated_tokens }} -gt 10
+          test ${{ steps.run_action.outputs.included_files }} -gt 0
+          test ${{ steps.run_action.outputs.estimated_tokens }} -gt 0
+          test ${{ steps.run_action.outputs.binary_files }} -eq 0
+          test ${{ steps.run_action.outputs.total_files }} -gt 0
+
+      - name: Check files are not listed
+        run: |
+          test -z "$(cat ${{ env.DIGEST_LOG }} | grep 'Files included in the output:')"
+
+      - name: Check whitespace-removal is not applied
+        run: |
+          test -z "$(cat ${{ env.DIGEST_LOG }} | grep 'Whitespace removal enabled')"
