@@ -68,3 +68,7 @@ runs:
       shell: bash
       env:
         DIGEST_LOG: ${{ inputs.digest_log }}
+
+branding:
+  icon: 'box'
+  color: 'gray-dark'
