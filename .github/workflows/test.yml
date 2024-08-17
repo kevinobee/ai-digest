@@ -17,13 +17,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: ai-digest
-          clean: true
 
       - name: Run action
         id: run_action
-        uses: ./ai-digest
+        uses: ./
 
       - name: Check output files exist
         run: |
@@ -56,15 +53,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: ai-digest
-          clean: true
 
       - name: Run action
         id: run_action
-        uses: ./ai-digest
+        uses: ./
         with:
-          input_path: './ai-digest/.github/workflows'
+          input_path: '.github/workflows'
           output_file: ${{ env.OUTPUT_FILE }}
           digest_log: ${{ env.DIGEST_LOG }}
           ai_digest_flags: ''
