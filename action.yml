@@ -1,4 +1,4 @@
-name: 'ai-digest'
+name: ai-digest action
 
 description: 'Runs ai-digest CLI as a GitHub Action'
 
